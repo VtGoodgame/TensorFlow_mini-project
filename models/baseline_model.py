@@ -1,6 +1,9 @@
+import datetime
 from tensorflow import keras
 from tensorflow.keras import layers
+
 from data.iris import X_test, X_train, y_train, y_test
+from handlers.save_handler import save_results, save_model
 
 # 1. Создаём модель — полносвязная сеть
 baseline_model = keras.Sequential([
@@ -27,13 +30,30 @@ history = baseline_model.fit(
     epochs=50,
     batch_size=8,
     validation_split=0.2,
-    verbose=1 # убираем вывод
+    verbose=0 # убираем вывод
 )
 
 # Оценка на тесте
 baseline_test_loss, baseline_test_acc = baseline_model.evaluate(
-    X_test, y_test, verbose=0
+    X_test, y_test, verbose=1
 )
 baseline_train_loss, baseline_train_acc = baseline_model.evaluate(
-    X_train, y_train, verbose=0
+    X_train, y_train, verbose=1
 )
+
+# Собираем метрики
+results = {
+    "model_name": "Baseline",
+    "test_accuracy": float(baseline_test_acc),
+    "test_loss": float(baseline_test_loss),
+    "train_accuracy": float(baseline_train_acc),
+    "train_loss": float(baseline_train_loss),
+    "val_accuracy": float(history.history["val_accuracy"][-1]),
+    "val_loss": float(history.history["val_loss"][-1]),
+    "total_params": baseline_model.count_params(),
+    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+}
+
+# Сохраняем результаты и модель
+save_results(results = results, model_name = "baseline_model")
+save_model(model = baseline_model, model_name = "baseline_model")
