@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -29,10 +29,10 @@ improved_history = improved_model.fit(
 
 # Оценка на тесте
 improved_test_loss, improved_test_acc = improved_model.evaluate(
-    X_test, y_test, verbose=1
+    X_test, y_test, verbose=0
 )
 improved_train_loss, improved_train_acc = improved_model.evaluate(
-    X_train, y_train, verbose=1
+    X_train, y_train, verbose=0
 )
 
 # Собираем метрики

@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -55,5 +55,6 @@ results = {
 }
 
 # Сохраняем результаты и модель
+
 save_results(results = results, model_name = "baseline_model")
 save_model(model = baseline_model, model_name = "baseline_model")
