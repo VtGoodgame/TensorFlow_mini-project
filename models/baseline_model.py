@@ -1,6 +1,9 @@
 from tensorflow import keras
 from tensorflow.keras import layers
+
 from data.iris import X_test, X_train, y_train, y_test
+from handlers.save_handler import save_results
+from handlers.training_result import TrainingResult
 
 # 1. Создаём модель — полносвязная сеть
 baseline_model = keras.Sequential([
@@ -27,13 +30,28 @@ history = baseline_model.fit(
     epochs=50,
     batch_size=8,
     validation_split=0.2,
-    verbose=1 # убираем вывод
+    verbose=0 # убираем вывод
 )
 
 # Оценка на тесте
 baseline_test_loss, baseline_test_acc = baseline_model.evaluate(
-    X_test, y_test, verbose=0
+    X_test, y_test, verbose=1
 )
 baseline_train_loss, baseline_train_acc = baseline_model.evaluate(
-    X_train, y_train, verbose=0
+    X_train, y_train, verbose=1
 )
+
+results = TrainingResult(
+    model_name="baseline_model",
+    framework="keras",
+    timestamp=TrainingResult.now(),
+    train_accuracy=float(baseline_train_acc),
+    train_loss=float(baseline_train_loss),
+    test_accuracy=float(baseline_test_acc),
+    test_loss=float(baseline_test_loss),
+    val_accuracy=float(history.history["val_accuracy"][-1]),
+    val_loss=float(history.history["val_loss"][-1]),
+    total_params=baseline_model.count_params(),
+)
+
+save_results(results)
