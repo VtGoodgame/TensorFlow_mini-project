@@ -88,9 +88,6 @@ TensorFlow_mini-project/
 │   ├── save_handler.py          # Сохранение результатов обучения модели в JSON
 │   └── training_result.py       # Единая схема результатов обучения (TrainingResult)
 │
-├── example/                     # Обучающие примеры
-│   └── numpy_neural_network.py  # Нейросеть с нуля на NumPy: forward, loss, backprop, обучение
-│
 ├── scripts/                     # Скрипты развёртывания
 │   ├── deploy.ps1               # Развёртывание + пошаговый запуск моделей (Windows)
 │   └── deploy.sh                # Развёртывание + пошаговый запуск моделей (Linux/macOS/Git Bash)
@@ -188,9 +185,6 @@ python -m models.improved_model
 # Обучение моделей на MNIST (PyTorch) — долго: при первом запуске MNIST скачивается (~120 МБ)
 python -m models.fully_conn_model
 python -m models.convNet_model
-
-# Обучающий пример: нейросеть с нуля на NumPy
-python -m example.numpy_neural_network
 ```
 
 Каждая модель пишет свой результат в `results/<model_name>_results.json` по единой схеме — см. [Формат результатов](#формат-результатов).
