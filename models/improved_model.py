@@ -1,9 +1,9 @@
-from datetime import datetime
 from tensorflow import keras
 from tensorflow.keras import layers
 
 from data.iris import X_test, X_train, y_train, y_test
-from handlers.save_handler import save_results, save_model
+from handlers.save_handler import save_results
+from handlers.training_result import TrainingResult
 
 improved_model = keras.Sequential([
     layers.Input(shape=(4,)),
@@ -35,19 +35,18 @@ improved_train_loss, improved_train_acc = improved_model.evaluate(
     X_train, y_train, verbose=0
 )
 
-# Собираем метрики
-results = {
-    "model_name": "improved_model",
-    "test_accuracy": float(improved_test_acc),
-    "test_loss": float(improved_test_loss),
-    "train_accuracy": float(improved_train_acc),
-    "train_loss": float(improved_train_loss),
-    "val_accuracy": float(improved_history.history["val_accuracy"][-1]),
-    "val_loss": float(improved_history.history["val_loss"][-1]),
-    "total_params": improved_model.count_params(),
-    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-}
+# Собираем результат по единой схеме
+results = TrainingResult(
+    model_name="improved_model",
+    framework="keras",
+    timestamp=TrainingResult.now(),
+    train_accuracy=float(improved_train_acc),
+    train_loss=float(improved_train_loss),
+    test_accuracy=float(improved_test_acc),
+    test_loss=float(improved_test_loss),
+    val_accuracy=float(improved_history.history["val_accuracy"][-1]),
+    val_loss=float(improved_history.history["val_loss"][-1]),
+    total_params=improved_model.count_params(),
+)
 
-#  Сохраняем результаты и модель
-save_results(results = results, model_name = "improved_model")
-save_model(model = improved_model, model_name = "improved_model")
+save_results(results)

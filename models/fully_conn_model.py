@@ -6,12 +6,12 @@
 # 
 # через линейные преобразования и функции активации.
 import torch
-import torch as nn
+import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.datasets import fetch_openml
-
 from data.mnist import X_training, X_test, y_training, y_test
+from handlers.save_handler import save_results
+from handlers.training_result import TrainingResult
 
 # Преобразование в тензоры
 X_train_t = torch.tensor(X_training)
@@ -84,20 +84,51 @@ for epoch in range(epochs):
         running_loss += loss.item() * batch_X.size(0)
 
     # Средняя ошибка за эпоху
-    epoch_loss = running_loss / len(train_loader.dataset)
+    epoch_loss = running_loss / len(train_dataset)
     print(f"Epoch {epoch+1}/{epochs}, Loss: {epoch_loss:.4f}")
 
-# переводим модель в режим оценки (выключаем dropout и batchnorm)
-model.eval()
-correct = 0 # сколько картинок угадано правильно
-total = 0 # сколько всего картинок обработано
-with torch.no_grad(): #  отключает вычисление градиентов на всём
-    for batch_X, batch_y in test_loader:
-        batch_X, batch_y = batch_X.to(device), batch_y.to(device)
-        outputs = model(batch_X) # прямой проход по батчу
-        _, predicted = torch.max(outputs, 1) # сохранение идекса класса с наибольшей вероятностью   
-        total += batch_y.size(0) # прибавляем количество картинок в батче к общему количеству
-        correct += (predicted == batch_y).sum().item() # подсчет правильных предсказаний в батче и прибавление к общему количеству правильных предсказаний
+# Функция оценки: считает средний loss и accuracy на переданном loader
+def evaluate_model(model, loader, criterion, device):
+    """Вычисляет loss и accuracy на переданном loader."""
+    model.eval() # переводим модель в режим оценки (выключаем dropout и batchnorm)
+    total_loss = 0.0
+    correct = 0 # сколько картинок угадано правильно
+    total = 0 # сколько всего картинок обработано
+    with torch.no_grad(): #  отключает вычисление градиентов на всём
+        for batch_X, batch_y in loader:
+            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+            outputs = model(batch_X) # прямой проход по батчу
+            loss = criterion(outputs, batch_y)
+            total_loss += loss.item() * batch_X.size(0)
+            _, predicted = torch.max(outputs, 1) # сохранение индекса класса с наибольшей вероятностью
+            total += batch_y.size(0) # прибавляем количество картинок в батче к общему количеству
+            correct += (predicted == batch_y).sum().item() # подсчет правильных предсказаний в батче и прибавление к общему количеству правильных предсказаний
 
-accuracy = correct / total # сколько правильных предсказаний от общего количества картинок
-print(f"Test Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
+    avg_loss = total_loss / total
+    accuracy = correct / total # сколько правильных предсказаний от общего количества картинок
+    return avg_loss, accuracy
+
+def count_parameters(model):
+    """Подсчёт количества обучаемых параметров."""
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+# Оценка на тесте и на трейне
+test_loss, test_accuracy = evaluate_model(model, test_loader, criterion, device)
+train_loss, train_accuracy = evaluate_model(model, train_loader, criterion, device)
+print(f"Test Accuracy: {test_accuracy:.4f} ({test_accuracy*100:.2f}%)")
+
+results = TrainingResult(
+    model_name="fully_conn_model",
+    framework="pytorch",
+    timestamp=TrainingResult.now(),
+    train_accuracy=float(train_accuracy),
+    train_loss=float(train_loss),
+    test_accuracy=float(test_accuracy),
+    test_loss=float(test_loss),
+    total_params=count_parameters(model),
+    epochs=epochs,
+    optimizer="Adam",
+    learning_rate=0.001,
+)
+
+save_results(results)

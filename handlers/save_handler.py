@@ -1,36 +1,22 @@
-import os
+"""Сохранение результатов обучения модели в JSON."""
+
 import json
-from  keras import Model
+import os
+
+from handlers.training_result import TrainingResult
+
 
 def save_results(
-    results: dict,
-    model_name: str,
-    results_dir: str = 'results'
-    ):
-    """_summary_
-
+    result: TrainingResult,
+    results_dir: str = "results"
+):
+    """
     Args:
-        results (dict): _description_
-        model_name (str): _description_
-        results_dir (str, optional): _description_. Defaults to 'results'.
+        result (TrainingResult): результаты обучения модели.
+        results_dir (str, optional): директория для сохранения результатов. Defaults to 'results'.
     """
     os.makedirs(results_dir, exist_ok=True)
-    with open(os.path.join(results_dir, f"{model_name}_results.json"), "w") as f:
-        json.dump(results, f, indent=4, ensure_ascii=False)
-    print(f"✅ Сохранено: {results_dir}/{model_name}_results.json")
-
-def save_model(
-    model: Model,
-    model_name: str,
-    results_dir: str = 'results'
-    ):
-    """_summary_
-
-    Args:
-        model (Model): _description_
-        model_name (str): _description_
-        results_dir (str, optional): _description_. Defaults to 'results'.
-    """
-    os.makedirs(results_dir, exist_ok=True)
-    model.save(os.path.join(results_dir, f"{model_name}.keras"))
-    print(f"✅ Сохранено: {results_dir}/{model_name}.keras")
+    path = os.path.join(results_dir, f"{result.model_name}_results.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(result.to_dict(), f, indent=4, ensure_ascii=False)
+    print(f"Сохранено: {result.model_name}_results.json")

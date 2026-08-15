@@ -1,26 +1,24 @@
 #  сверточная модель нейросети с использованием  Pytorch
-from datetime import datetime
-import numpy as np
-from sklearn.datasets import fetch_openml
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 
 from data.mnist import X_training, X_test, y_training, y_test
-from handlers import save_handler
+from handlers.save_handler import save_results
+from handlers.training_result import TrainingResult
 
 # Тензоры и DataLoader
-X_training = X_training.reshape(-1, 1, 28, 28).astype(np.float32)
-X_test = X_test.reshape(-1, 1, 28, 28).astype(np.float32)
+X_training = X_training.reshape(-1, 1, 28, 28)
+X_test = X_test.reshape(-1, 1, 28, 28)
 
 train_dataset = TensorDataset(
-    torch.tensor(X_training.astype(np.float32)), 
-    torch.tensor(y_training.astype(np.int64))  # для классификации
+    torch.tensor(X_training),
+    torch.tensor(y_training)  # для классификации
 )
 test_dataset = TensorDataset(
-    torch.tensor(X_test.astype(np.float32)),
-    torch.tensor(y_test.astype(np.int64))
+    torch.tensor(X_test),
+    torch.tensor(y_test)
 )
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
@@ -77,7 +75,7 @@ for epoch in range(epochs):
 
         running_loss += loss.item() * batch_X.size(0)
 
-    epoch_loss = running_loss / len(train_loader.dataset)
+    epoch_loss = running_loss / len(train_dataset)
     print(f"Epoch {epoch+1}/{epochs}, Loss: {epoch_loss:.4f}")
 
 #  Оценка и сбор метрик
@@ -111,19 +109,18 @@ def count_parameters(model):
 train_loss, train_acc = evaluate_model(model, train_loader, criterion, device)
 test_loss, test_acc = evaluate_model(model, test_loader, criterion, device)
 
-# Собираем итоговый словарь
-results = {
-    "model_name": "SimpleCNN",
-    "test_accuracy": float(test_acc),
-    "test_loss": float(test_loss),
-    "train_accuracy": float(train_acc),
-    "train_loss": float(train_loss),
-    "total_params": count_parameters(model),
-    "epochs": epochs,
-    "optimizer": "Adam",
-    "learning_rate": 0.001,
-    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-}
+results = TrainingResult(
+    model_name="convNet_model",
+    framework="pytorch",
+    timestamp=TrainingResult.now(),
+    train_accuracy=float(train_acc),
+    train_loss=float(train_loss),
+    test_accuracy=float(test_acc),
+    test_loss=float(test_loss),
+    total_params=count_parameters(model),
+    epochs=epochs,
+    optimizer="Adam",
+    learning_rate=0.001,
+)
 
-save_handler.save_results(results=results, model_name='convNet_model')
-save_handler.save_model(model=model, model_name='convNet_model')
+save_results(results)

@@ -1,13 +1,22 @@
 from sklearn.datasets import fetch_openml
-from sklearn.model_selection import train_test_split
+import numpy as np
+# Загружаем MNIST
+X, Y = fetch_openml("mnist_784",
+                    version=1,
+                    return_X_y=True,
+                    as_frame=False,
+                    parser="auto") # type: ignore
 
-x_mnist, y_mnist = fetch_openml("mnist_784",
-                                version=1,
-                                return_X_y=True,
-                                as_frame=False,
-                                parser="auto")
+# Успокаиваем Pylance — говорим, что это numpy массивы
+X: np.ndarray = X  # type: ignore
+Y: np.ndarray = Y  # type: ignore
 
-# Разделение на train и test (MNIST: первые 60000 — train, остальные — test)
-X_training, X_test, y_training, y_test = train_test_split(
-    x_mnist, y_mnist, test_size=10000, random_state=42, stratify=y_mnist
-)
+# Преобразуем типы
+X = X.astype("float32") / 255.0
+y = Y.astype("int64")
+
+# Разделяем
+X_training = X[:60000]
+X_test = X[60000:]
+y_training = y[:60000]
+y_test = y[60000:]
